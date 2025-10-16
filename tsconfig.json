@@ -6,7 +6,6 @@
   ],
   "compilerOptions": {
     "baseUrl": ".",
-    "base": "/report_generator/",
     "paths": {
       "@/*": ["./src/*"]
     }
