@@ -6,6 +6,7 @@ import type { ColumnDef } from "@tanstack/react-table"
 // You can use a Zod schema here if you want.
 export type Sale = {
   id: string
+  date: string
   product_type: string
   color: string
   design: string

@@ -21,7 +21,16 @@ const cogs = [
 
 async function getData(): Promise<Sale[]> {
   // Fetch data from your API here.
-  const { data, error } = await supabase.from('Sales').select('*');
+  const today = new Date();
+  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+  const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
+
+  const { data, error } = await supabase
+    .from('Sales')
+    .select('*')
+    .gte('date', startOfDay)
+    .lt('date', endOfDay);
+
   if (error) {
     console.error('Error fetching sales data:', error);
     return [];
@@ -32,6 +41,7 @@ async function getData(): Promise<Sale[]> {
 function App() {
   const [data, setData] = useState<Sale[]>([]);
   const [totals, setTotals] = useState<TotalSales | null>(null);
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
   const handleGenerateReport = async () => {
     const apiData = await getData();
@@ -78,7 +88,7 @@ function App() {
           <Button className="max-w-fit mx-auto" variant={"outline"} size={"lg"} onClick={handleGenerateReport}>Generate Report</Button>
         </CardHeader>
         <CardContent className="space-y-3">
-          <CardTitle className="text-justify">For {"TODAY'S DATE"}:</CardTitle>
+          <CardTitle className="text-justify">For {today}:</CardTitle>
           <DataTable columns={columns} data={data} />
           <DataTable columns={totalColumns} data={totals ? [totals] : []} />
         </CardContent>
