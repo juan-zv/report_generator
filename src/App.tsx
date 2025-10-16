@@ -41,9 +41,11 @@ async function getData(): Promise<Sale[]> {
 function App() {
   const [data, setData] = useState<Sale[]>([]);
   const [totals, setTotals] = useState<TotalSales | null>(null);
+  const [loading, setLoading] = useState(false);
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
   const handleGenerateReport = async () => {
+    setLoading(true);
     const apiData = await getData();
     const newData = apiData.map(sale => ({
       ...sale,
@@ -69,6 +71,7 @@ function App() {
       card: totalCard,
       cash: totalCash,
     });
+    setLoading(false);
   }
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -81,13 +84,13 @@ function App() {
             <br />
             NOTE: It is under development, so please be patient with any bugs or issues.
             <br />
-            Date filter feature is not working yet, so it is displaying all data for now.
-            <br />
             Thank you for your understanding and support!
           </CardDescription>
-          <Button className="max-w-fit mx-auto" variant={"outline"} size={"lg"} onClick={handleGenerateReport}>Generate Report</Button>
+          <Button className="max-w-fit mx-auto" variant={"outline"} size={"lg"} onClick={handleGenerateReport} disabled={loading}>
+            {loading ? 'Generating...' : 'Generate Report'}
+          </Button>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className={`space-y-3 ${loading ? 'opacity-50' : ''}`}>
           <CardTitle className="text-justify">For {today}:</CardTitle>
           <DataTable columns={columns} data={data} />
           <DataTable columns={totalColumns} data={totals ? [totals] : []} />
