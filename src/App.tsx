@@ -6,7 +6,13 @@ import { ModeToggle } from "@/components/mode-toggle"
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from '@/components/ui/button'
-import { ChartNoAxesCombined } from 'lucide-react';
+import { ChartNoAxesCombined, CalendarIcon } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { DataTable } from '@/table/data-table'
 
 import { columns, type Sale } from '@/table/columns'
@@ -19,11 +25,10 @@ const cogs = [
   { product: 'hoodie', cogs: 19.05 }
 ] as const
 
-async function getData(): Promise<Sale[]> {
+async function getData(targetDate: Date): Promise<Sale[]> {
   // Fetch data from your API here.
-  const today = new Date();
-  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
-  const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
+  const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate()).toISOString();
+  const endOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() + 1).toISOString();
 
   const { data, error } = await supabase
     .from('Sales')
@@ -42,11 +47,22 @@ function App() {
   const [data, setData] = useState<Sale[]>([]);
   const [totals, setTotals] = useState<TotalSales | null>(null);
   const [loading, setLoading] = useState(false);
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  
+  // Generate last 5 days
+  const last5Days = Array.from({ length: 5 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    return date;
+  });
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  };
 
   const handleGenerateReport = async () => {
     setLoading(true);
-    const apiData = await getData();
+    const apiData = await getData(selectedDate);
     const newData = apiData.map(sale => ({
       ...sale,
       cogs: cogs.find(c => c.product === sale.product_type)?.cogs ?? 0
@@ -78,7 +94,29 @@ function App() {
       <ModeToggle />
       <Card className="my-1.5 p-4 w-full mx-auto">
         <CardHeader>
-          <CardTitle>Sales Report Generator</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            Sales Report Generator
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="ml-2">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {last5Days.map((date, index) => (
+                  <DropdownMenuItem
+                    key={index}
+                    onClick={() => setSelectedDate(date)}
+                    className={selectedDate.toDateString() === date.toDateString() ? 'bg-accent' : ''}
+                  >
+                    {formatDate(date)}
+                    {index === 0 && ' (Today)'}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </CardTitle>
           <CardDescription>
             Generate sales reports from Keystone database with a single click!
             <br />
@@ -91,7 +129,7 @@ function App() {
           </Button>
         </CardHeader>
         <CardContent className={`space-y-3 ${loading ? 'opacity-50' : ''}`}>
-          <CardTitle className="text-justify">For {today}:</CardTitle>
+          <CardTitle className="text-justify">For {formatDate(selectedDate)}:</CardTitle>
           <DataTable columns={columns} data={data} />
           <DataTable columns={totalColumns} data={totals ? [totals] : []} />
         </CardContent>
