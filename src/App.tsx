@@ -64,6 +64,7 @@ function App() {
   const [weeklyTotals, setWeeklyTotals] = useState<WeeklyTotals[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -170,7 +171,7 @@ function App() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             Sales Report Generator
-            <DropdownMenu>
+            <DropdownMenu open={calendarOpen} onOpenChange={setCalendarOpen}>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="ml-2">
                   <CalendarIcon className="mr-2 h-4 w-4" />
@@ -181,7 +182,12 @@ function App() {
                 <Calendar
                   mode="single"
                   selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
+                  onSelect={(date) => {
+                    if (date) {
+                      setSelectedDate(date);
+                      setCalendarOpen(false);
+                    }
+                  }}
                   initialFocus
                 />
               </DropdownMenuContent>
