@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 
 import { ThemeProvider } from "@/components/theme-provider"
@@ -17,6 +17,7 @@ import { DataTable } from '@/table/data-table'
 
 import { columns, type Sale } from '@/table/columns'
 import { columns as totalColumns, type TotalSales } from '@/table/totals'
+import { columns as weeklyColumns, type WeeklyTotals } from '@/table/weekly-totals'
 
 import supabase from '@/utils/supabase';
 
@@ -43,9 +44,24 @@ async function getData(targetDate: Date): Promise<Sale[]> {
   return data as Sale[];
 }
 
+async function getAllWeeklyData(): Promise<Sale[]> {
+  // Get all sales data from the database
+  const { data, error } = await supabase
+    .from('Sales')
+    .select('*')
+    .order('date', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching all sales data:', error);
+    return [];
+  }
+  return data as Sale[];
+}
+
 function App() {
   const [data, setData] = useState<Sale[]>([]);
   const [totals, setTotals] = useState<TotalSales | null>(null);
+  const [weeklyTotals, setWeeklyTotals] = useState<WeeklyTotals[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
@@ -60,6 +76,70 @@ function App() {
     return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   };
 
+  const loadWeeklyTotals = async () => {
+    const allData = await getAllWeeklyData();
+    
+    if (allData.length === 0) {
+      setWeeklyTotals([]);
+      return;
+    }
+
+    // Group sales by week (Monday to Sunday)
+    const weeklyGroups = new Map<string, Sale[]>();
+    
+    allData.forEach(sale => {
+      const saleDate = new Date(sale.date);
+      // Get Monday of the week (ISO week starts on Monday)
+      const dayOfWeek = saleDate.getDay();
+      const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // If Sunday, go back 6 days, otherwise go to Monday
+      const monday = new Date(saleDate);
+      monday.setDate(saleDate.getDate() + diff);
+      monday.setHours(0, 0, 0, 0);
+      
+      const weekKey = monday.toISOString().split('T')[0]; // Use Monday's date as key
+      
+      if (!weeklyGroups.has(weekKey)) {
+        weeklyGroups.set(weekKey, []);
+      }
+      weeklyGroups.get(weekKey)!.push(sale);
+    });
+
+    // Convert to array and calculate totals for each week
+    const weeklyTotalsArray: WeeklyTotals[] = Array.from(weeklyGroups.entries())
+      .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime()) // Sort by most recent first
+      .map(([weekKey, sales], index) => {
+        const monday = new Date(weekKey);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        
+        const formatShort = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const weekPeriod = `${formatShort(monday)} - ${formatShort(sunday)}`;
+        
+        const salesWithCogs = sales.map(sale => ({
+          ...sale,
+          cogs: cogs.find(c => c.product === sale.product_type)?.cogs ?? 0
+        }));
+        
+        const tshirts = salesWithCogs.filter(sale => sale.product_type === 'tshirt').length;
+        const hoodies = salesWithCogs.filter(sale => sale.product_type === 'hoodie').length;
+        const revenue = salesWithCogs.reduce((sum, sale) => sum + sale.price, 0);
+        
+        return {
+          id: `week-${index}`,
+          weekPeriod,
+          tshirts,
+          hoodies,
+          revenue: revenue.toFixed(2),
+        };
+      });
+
+    setWeeklyTotals(weeklyTotalsArray);
+  };
+
+  useEffect(() => {
+    loadWeeklyTotals();
+  }, []);
+
   const handleGenerateReport = async () => {
     setLoading(true);
     const apiData = await getData(selectedDate);
@@ -69,7 +149,7 @@ function App() {
     }));
     setData(newData);
 
-    // Calculate totals
+    // Calculate daily totals
     const totalTshirts = newData.filter(sale => sale.product_type === 'tshirt').length;
     const totalHoodies = newData.filter(sale => sale.product_type === 'hoodie').length;
     const totalCogs = newData.reduce((sum, sale) => sum + sale.cogs, 0);
@@ -77,7 +157,7 @@ function App() {
     const totalCard = newData.filter(sale => sale.payment_method === 'card').length;
     const totalCash = newData.filter(sale => sale.payment_method === 'cash').length;
   
-    // Set totals state
+    // Set daily totals state
     setTotals({
       id: 'totals',
       tshirts: totalTshirts.toString(),
@@ -87,6 +167,7 @@ function App() {
       card: totalCard,
       cash: totalCash,
     });
+
     setLoading(false);
   }
   return (
@@ -132,6 +213,9 @@ function App() {
           <CardTitle className="text-justify">For {formatDate(selectedDate)}:</CardTitle>
           <DataTable columns={columns} data={data} />
           <DataTable columns={totalColumns} data={totals ? [totals] : []} />
+          
+          <CardTitle className="text-justify mt-6">Weekly Totals:</CardTitle>
+          <DataTable columns={weeklyColumns} data={weeklyTotals} />
         </CardContent>
         <CardFooter>
           <CardDescription className="flex items-center">
