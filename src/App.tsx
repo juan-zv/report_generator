@@ -10,9 +10,9 @@ import { ChartNoAxesCombined, CalendarIcon } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Calendar } from "@/components/ui/calendar"
 import { DataTable } from '@/table/data-table'
 
 import { columns, type Sale } from '@/table/columns'
@@ -64,13 +64,6 @@ function App() {
   const [weeklyTotals, setWeeklyTotals] = useState<WeeklyTotals[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  
-  // Generate last 5 days
-  const last5Days = Array.from({ length: 5 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    return date;
-  });
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -181,20 +174,16 @@ function App() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="ml-2">
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {last5Days.map((date, index) => (
-                  <DropdownMenuItem
-                    key={index}
-                    onClick={() => setSelectedDate(date)}
-                    className={selectedDate.toDateString() === date.toDateString() ? 'bg-accent' : ''}
-                  >
-                    {formatDate(date)}
-                    {index === 0 && ' (Today)'}
-                  </DropdownMenuItem>
-                ))}
+              <DropdownMenuContent align="end" className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  initialFocus
+                />
               </DropdownMenuContent>
             </DropdownMenu>
           </CardTitle>
