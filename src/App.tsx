@@ -100,7 +100,7 @@ function App() {
 
     // Convert to array and calculate totals for each week
     const weeklyTotalsArray: WeeklyTotals[] = Array.from(weeklyGroups.entries())
-      .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime()) // Sort by most recent first
+      .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime()) // Sort by oldest first (most recent at bottom)
       .map(([weekKey, sales], index) => {
         const monday = new Date(weekKey);
         const sunday = new Date(monday);
@@ -129,10 +129,6 @@ function App() {
 
     setWeeklyTotals(weeklyTotalsArray);
   };
-
-  useEffect(() => {
-    loadWeeklyTotals();
-  }, []);
 
   const handleGenerateReport = async () => {
     setLoading(true);
@@ -164,6 +160,11 @@ function App() {
 
     setLoading(false);
   }
+
+  useEffect(() => {
+    loadWeeklyTotals();
+    handleGenerateReport();
+  }, [selectedDate]);
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <ModeToggle />
@@ -200,9 +201,6 @@ function App() {
             <br />
             Thank you for your understanding and support!
           </CardDescription>
-          <Button className="max-w-fit mx-auto" variant={"outline"} size={"lg"} onClick={handleGenerateReport} disabled={loading}>
-            {loading ? 'Generating...' : 'Generate Report'}
-          </Button>
         </CardHeader>
         <CardContent className={`space-y-3 ${loading ? 'opacity-50' : ''}`}>
           <CardTitle className="text-justify">For {formatDate(selectedDate)}:</CardTitle>
