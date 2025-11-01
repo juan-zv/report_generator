@@ -205,7 +205,7 @@ function App() {
         const weekEnd = new Date(weekStart.getTime() + weekLengthMs - 1); // End is 6 days 23:59:59 later
         
         const formatShort = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const weekPeriod = `IBC Week ${weekNumber + 1}: ${formatShort(weekStart)} - ${formatShort(weekEnd)}`;
+        const weekPeriod = `${formatShort(weekStart)} - ${formatShort(weekEnd)}`;
         
         const salesWithCogs = sales.map(sale => ({
           ...sale,
