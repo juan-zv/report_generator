@@ -45,10 +45,26 @@ export type Sale = {
   cogs: number
   price: number
   payment_method: string
+  seller?: string
   notes: string
 }
 
 export const columns: ColumnDef<Sale>[] = [
+  {
+    accessorKey: "date",
+    header: "Date & Time",
+    cell: ({ row }) => {
+      const dateString = row.getValue("date") as string
+      const date = new Date(dateString)
+      return date.toLocaleString('en-US', {
+        // month: 'short',
+        // day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      })
+    },
+  },
   {
     accessorKey: "product_type",
     header: "Type",

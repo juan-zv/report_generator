@@ -18,6 +18,7 @@ import { DataTable } from '@/table/data-table'
 import { columns, type Sale } from '@/table/columns'
 import { columns as totalColumns, type TotalSales } from '@/table/totals'
 import { columns as weeklyColumns, type WeeklyTotals } from '@/table/weekly-totals'
+import { SellerStats, type SellerStat } from '@/components/seller-stats'
 
 import supabase from '@/utils/supabase';
 
@@ -146,10 +147,17 @@ async function getAllWeeklyData(): Promise<Sale[]> {
   return data as Sale[];
 }
 
+const SELLERS = [
+  "Juan", "Lydia", "Corbyn", "Hailee", "Joseph", "Jason", "Anabella",
+  "Cortland", "Diego", "Ally", "Kayla", "Makall", "Michael", "Price",
+  "Katie", "Carter", "Jessica"
+] as const;
+
 function App() {
   const [data, setData] = useState<Sale[]>([]);
   const [totals, setTotals] = useState<TotalSales | null>(null);
   const [weeklyTotals, setWeeklyTotals] = useState<WeeklyTotals[]>([]);
+  const [sellerStats, setSellerStats] = useState<SellerStat[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -166,36 +174,38 @@ function App() {
       return;
     }
 
-    // Group sales by week (Monday to Sunday)
-    const weeklyGroups = new Map<string, Sale[]>();
+    // IBC Financial Week starts on Oct 12, 2024 (Saturday) and runs for 7 days (Sat-Fri)
+    const firstWeekStart = new Date('2024-10-12T00:00:00');
+    const weekLengthMs = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+    
+    // Group sales by IBC Financial Week
+    const financialWeekGroups = new Map<number, Sale[]>();
     
     allData.forEach(sale => {
       const saleDate = new Date(sale.date);
-      // Get Monday of the week (ISO week starts on Monday)
-      const dayOfWeek = saleDate.getDay();
-      const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // If Sunday, go back 6 days, otherwise go to Monday
-      const monday = new Date(saleDate);
-      monday.setDate(saleDate.getDate() + diff);
-      monday.setHours(0, 0, 0, 0);
       
-      const weekKey = monday.toISOString().split('T')[0]; // Use Monday's date as key
+      // Calculate which week this sale belongs to
+      const timeDiff = saleDate.getTime() - firstWeekStart.getTime();
+      const weekNumber = Math.floor(timeDiff / weekLengthMs);
       
-      if (!weeklyGroups.has(weekKey)) {
-        weeklyGroups.set(weekKey, []);
+      // Only include sales that are on or after the first week start
+      if (weekNumber >= 0) {
+        if (!financialWeekGroups.has(weekNumber)) {
+          financialWeekGroups.set(weekNumber, []);
+        }
+        financialWeekGroups.get(weekNumber)!.push(sale);
       }
-      weeklyGroups.get(weekKey)!.push(sale);
     });
 
-    // Convert to array and calculate totals for each week
-    const weeklyTotalsArray: WeeklyTotals[] = Array.from(weeklyGroups.entries())
-      .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime()) // Sort by oldest first (most recent at bottom)
-      .map(([weekKey, sales], index) => {
-        const monday = new Date(weekKey);
-        const sunday = new Date(monday);
-        sunday.setDate(monday.getDate() + 6);
+    // Convert to array and calculate totals for each IBC Financial Week
+    const financialWeeks: WeeklyTotals[] = Array.from(financialWeekGroups.entries())
+      .sort(([a], [b]) => a - b) // Sort by week number
+      .map(([weekNumber, sales]) => {
+        const weekStart = new Date(firstWeekStart.getTime() + (weekNumber * weekLengthMs));
+        const weekEnd = new Date(weekStart.getTime() + weekLengthMs - 1); // End is 6 days 23:59:59 later
         
         const formatShort = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const weekPeriod = `${formatShort(monday)} - ${formatShort(sunday)}`;
+        const weekPeriod = `IBC Week ${weekNumber + 1}: ${formatShort(weekStart)} - ${formatShort(weekEnd)}`;
         
         const salesWithCogs = sales.map(sale => ({
           ...sale,
@@ -211,7 +221,7 @@ function App() {
         const revenue = salesWithCogs.reduce((sum, sale) => sum + sale.price, 0);
         
         return {
-          id: `week-${index}`,
+          id: `ibc-week-${weekNumber}`,
           weekPeriod,
           tshirts,
           hoodies,
@@ -219,7 +229,7 @@ function App() {
         };
       });
 
-    setWeeklyTotals(weeklyTotalsArray);
+    setWeeklyTotals(financialWeeks);
   };
 
   const handleGenerateReport = async () => {
@@ -254,6 +264,22 @@ function App() {
       cash: totalCash,
     });
 
+    // Calculate seller statistics
+    const sellerCounts = new Map<string, number>();
+    SELLERS.forEach(seller => sellerCounts.set(seller, 0));
+    
+    newData.forEach(sale => {
+      if (sale.seller && SELLERS.includes(sale.seller as any)) {
+        sellerCounts.set(sale.seller, (sellerCounts.get(sale.seller) || 0) + 1);
+      }
+    });
+
+    const sellerStatsArray: SellerStat[] = Array.from(sellerCounts.entries()).map(([name, count]) => ({
+      name,
+      count
+    }));
+
+    setSellerStats(sellerStatsArray);
     setLoading(false);
   }
 
@@ -305,6 +331,10 @@ function App() {
           
           <CardTitle className="text-justify mt-6">Weekly Totals:</CardTitle>
           <DataTable columns={weeklyColumns} data={weeklyTotals} />
+
+          <div className="mt-6">
+            <SellerStats sellerStats={sellerStats} />
+          </div>
         </CardContent>
         <CardFooter>
           <CardDescription className="flex items-center">
