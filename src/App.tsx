@@ -174,8 +174,8 @@ function App() {
       return;
     }
 
-    // IBC Financial Week starts on Oct 12, 2024 (Saturday) and runs for 7 days (Sat-Fri)
-    const firstWeekStart = new Date('2024-10-12T00:00:00');
+    // IBC Financial Week starts on Oct 12, 2025 (Sunday) and runs for 7 days
+    const firstWeekStart = new Date('2025-10-10T00:00:00');
     const weekLengthMs = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
     
     // Group sales by IBC Financial Week

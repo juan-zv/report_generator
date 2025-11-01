@@ -52,7 +52,7 @@ export type Sale = {
 export const columns: ColumnDef<Sale>[] = [
   {
     accessorKey: "date",
-    header: "Date & Time",
+    header: "Time",
     cell: ({ row }) => {
       const dateString = row.getValue("date") as string
       const date = new Date(dateString)
