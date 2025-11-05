@@ -1,73 +1,42 @@
-# React + TypeScript + Vite
+# IBC Report Generator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This webapp was made by Juansito to better keep track of sales and inventory for IBC.
 
-Currently, two official plugins are available:
+To use just fill out the form and submit. You can also cancel to reset the form.
+The data is stored in a Supabase database.
+The app is built with React, TypeScript, Vite, ESLint, Shadcn UI, Radix UI, Tailwind CSS and Zod.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Getting Started
 
-## React Compiler
+It is currently deployed at [https://juan-zv.github.io/ibc_sales_webapp/](https://juan-zv.github.io/ibc_sales_webapp/).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+To set up the project locally, follow these steps:
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/juan-zv/report_generator.git
+    ```
 
-## Expanding the ESLint configuration
+2. Install dependencies:
+    ```bash
+    cd report_generator
+    npm install
+    ```
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+3. Start the development server:
+    ```bash
+    npm run dev
+    ```
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+4. Open your browser and navigate to `http://localhost:5173` to view the app.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Dependencies
+- [React](https://reactjs.org/) - A JavaScript library for building user interfaces
+- [TypeScript](https://www.typescriptlang.org/) - A strongly typed programming language
+- [Vite](https://vitejs.dev/) - Next Generation Frontend Tooling
+- [ESLint](https://eslint.org/) - The pluggable linting utility for JavaScript and TypeScript
+- [Shadcn UI](https://ui.shadcn.com/) - Beautifully designed components built using Radix UI and Tailwind CSS
+- [Supabase](https://supabase.com/) - An open source Firebase alternative.
+- [Radix UI](https://www.radix-ui.com/) - Unstyled, accessible components for building high-quality design systems and web apps.
+- [Tailwind CSS](https://tailwindcss.com/) - A utility-first CSS framework for rapid UI development
+- [Zod](https://zod.dev/) - TypeScript-first schema declaration and validation library
