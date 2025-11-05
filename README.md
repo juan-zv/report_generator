@@ -8,7 +8,7 @@ The app is built with React, TypeScript, Vite, ESLint, Shadcn UI, Radix UI, Tail
 
 ## Getting Started
 
-It is currently deployed at [https://juan-zv.github.io/ibc_sales_webapp/](https://juan-zv.github.io/ibc_sales_webapp/).
+It is currently deployed at [https://juan-zv.github.io/report_generator/](https://juan-zv.github.io/report_generator/).
 
 To set up the project locally, follow these steps:
 1. Clone the repository:
